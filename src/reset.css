@@ -1,0 +1,94 @@
+/* --------------- FICHIER RESET CSS ------------------------------------------
+-------------------------------------------------------------------------*/
+*,
+*::before,
+*::after {
+  /* 1️⃣Empêche le padding et border d'affecter la largeur/hauteur */
+  box-sizing: border-box;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 2️⃣ Supprimer les marges et paddings par défaut */
+body, h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+/* 3️⃣ Supprimer la décoration des listes et liens */
+ul, ol {
+  list-style: none; /* Supprime les puces des listes */
+}
+
+a {
+  text-decoration: none; /* Supprime le soulignement des liens */
+  color: inherit; /* Les liens prennent la couleur du texte parent */
+}
+
+/* 4️⃣ Assurer une typographie cohérente */
+body {
+  font-family: "poppins", Arial, sans-serif; /* Change selon le projet */
+  font-size: 16px; /* Base cohérente */
+  line-height: 1.5; /* Espacement optimal entre les lignes */
+}
+
+/* 5️⃣ Éviter les débordements sur petits écrans */
+html, body {
+  width: 100%;
+  overflow-x: hidden; /* Empêche les barres de scroll horizontales */
+  scroll-behavior: smooth;
+}
+
+/* 6️⃣ Améliorer l'accessibilité et le focus */
+button, input, textarea {
+  font-family: inherit; /* Garde la même police que le reste du site */
+}
+
+:focus {
+  outline: none; /* Supprime l’outline par défaut (attention à ajouter un style focus personnalisé) */
+}
+
+/* 
+🔧📌 ADAPTATIONS POSSIBLES (5% des cas) 🔧📌
+
+1️⃣ FONTES → Si le projet a une charte stricte, remplace `font-family: Arial, sans-serif;` 
+   Ex: `font-family: 'Roboto', sans-serif;`
+
+2️⃣ FOCUS → Pour l'accessibilité, personnalise le `outline` au lieu de le supprimer.
+   Ex: `:focus { outline: 2px solid #ff385c; border-radius: 5px; }`
+
+3️⃣ SCROLL HORIZONTAL → Si le site utilise des carrousels ou tableaux larges, 
+   supprime `overflow-x: hidden;` de `html, body`.
+
+4️⃣ LISTES → Si tu veux garder des puces sur certains `ul`, applique `list-style: disc;` 
+   uniquement aux listes concernées.
+
+5️⃣ FORMULAIRES → Pour styliser les inputs et boutons de manière homogène,
+   ajuste `button, input, textarea` selon le design du projet.
+
+💡 👉 Ces modifications ne sont à faire que si nécessaires, sinon la base couvre 95% des besoins !
+
+ PATTERN MAIL: pattern="[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]{2,15}"
+               + aria-required="true" (oblig + vocalisé) */
+/* 
+███████████████████████████████████████████████████████████████████████
+            🎯🎯🎯 FIN DU COMMENTAIRE - REPÈRE VISUEL 🎯🎯🎯
+███████████████████████████████████████████████████████████████████████
+███████████████████████████████████████████████████████████████████████
+███████████████████████████████████████████████████████████████████████
+███████████████████████████████████████████████████████████████████████
+*/
+body {
+  height: 100vh;
+}
