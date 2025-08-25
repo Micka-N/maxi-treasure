@@ -1,4 +1,12 @@
+:root {
+  --primary-color: #fff000; /* Couleur principale*/
+  --secondary-color: #9a9165; /* Couleur secondaire*/
+  --tertiary-color: #fdf9ec; /* Troisième couleur*/
+  --fourth-color: #1f1c0c; /* Quatrième couleur*/
+}
+
 #app {
   width: 100%;
   height: 100%;
 }
+

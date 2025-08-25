@@ -38,8 +38,9 @@ a {
 
 /* 4️⃣ Assurer une typographie cohérente */
 body {
-  font-family: "poppins", Arial, sans-serif; /* Change selon le projet */
-  font-size: 16px; /* Base cohérente */
+  font-family: "Roboto Mono", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
   line-height: 1.5; /* Espacement optimal entre les lignes */
 }
 
