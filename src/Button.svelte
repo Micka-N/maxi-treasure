@@ -37,7 +37,11 @@
 .button-32:not(:disabled):focus {
     outline: 0;
     background: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--secondary-color), 0 3px 8px 0 var(--secondary-color);
+    box-shadow: 2px 2px 2px 2px var(--secondary-color), 2px 2px 2px 2px var(--secondary-color);
+}
+
+.button-32:not(:disabled):focus {
+    background:  var(--tertiary-color);
 }
 
 .button-32:disabled {
