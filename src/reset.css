@@ -92,4 +92,6 @@ button, input, textarea {
 */
 body {
   height: 100vh;
+  min-width: 410px;
+  min-height: 550px;
 }
