@@ -4,16 +4,30 @@
     // Imports:----------------------------------------------------------------
     import Button from "./Button.svelte";
     // Variables:--------------------------------------------------------------
-    let currentPage = $state("accueil");    // Page courante
-    let winnerName = $state(null);          // Nom recordman actuel
-    let winnerScore = $state(null);         // Score recordman actuel
-    let currentPlayer = $state({            // Objet joueur actuel
+    let currentPage = $state("accueil");      // Page courante
+    const winnerPlayer = $state({             // Objet du meilleur joueur
+        nom: null,
+        score: null
+    });
+    const currentPlayer = $state({            // Objet joueur actuel
         nom: "",
         age: 0,
         ville: ""
     });
+    const listPlayers = $state([]);           // Tous les joueurs crées (tableau d'objets)
+
+
 
     // Fonctions:--------------------------------------------------------------
+    function addPlayer() {
+        listPlayers.push({ ...currentPlayer });
+        // console.log("Liste joueurs:", listPlayers.map(p => ({ ...p }))); Pour logguer proprement avec $state
+    }
+    async function saveNewPlayer() {
+        
+    }
+
+    
     // Au démarrage de l'application: -----------------------------------------
 
 </script>
@@ -23,21 +37,23 @@
 
 <!-- 🔧 HTML  ═══════════════════════════ ⬇︎ ⬇︎ ⬇︎ ═════════════════════════════ 🔧 HTML -->
 <main>
+    <!-- Page d'accueil :-------------------------- -->
     {#if currentPage === "accueil"}
         <section id="accueil">
             <h1>MAXI-TREASURE</h1>
             <Button textButton="Créer joueur" on:click={() => currentPage = "creation"}/>
-            <Button textButton="Choisir joueur" />
+            <Button textButton="Choisir joueur" on:click={() => currentPage = "choix"}/>
             <div id="bloc-winner">
                 <img src="../public/winner.png" alt="couronne du vainqueur">
-                <p>record: <span class="gras">{winnerName}</span></p>
-                <p>score: <span class="gras">{winnerScore}</span></p>
+                <p>record: <span class="gras">{winnerPlayer.nom}</span></p>
+                <p>score: <span class="gras">{winnerPlayer.score}</span></p>
             </div>
         </section>
+    <!-- Page de création joueur :----------------- -->
     {:else if currentPage === "creation"}
         <section id="creation">
             <h1>CREATION D'UN JOUEUR</h1>
-            <form>
+            <div id="contain-form">
                 <div id="contain-name">
                     <label for="name">Nom</label>
                     <input id="name" type="text" bind:value={currentPlayer.nom}>
@@ -50,8 +66,19 @@
                     <label for="city">Ville</label>
                     <input id="city" type="text" bind:value={currentPlayer.ville}>
                 </div>
-                <Button textButton="Jouer avec ce joueur"></Button>
-            </form>
+                <Button textButton="Créer ce joueur" on:click={addPlayer}></Button>
+                <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"}></Button>
+            </div>
+        </section>
+    <!-- Page de choix de joueur :------------------- -->
+    {:else if currentPage === "choix"}
+        <section id="choix">
+            <h1>CHOISIR UN JOUEUR EXISTANT</h1>
+            <ul>
+                {#each listPlayers as joueur}
+                    <li>{joueur.nom}, {joueur.age} ans de {joueur.ville} <Button textButton="Jouer avec ce joueur"></Button></li>
+                {/each}
+            </ul>
         </section>
     {/if}
 </main>
@@ -128,7 +155,7 @@
         background-size: 60%;
     }
 
-    form {
+    #contain-form {
         /* border: 1px solid yellow; */
         width: 65%;
         max-width: 430px;
@@ -156,11 +183,31 @@
     #creation input {
         width: 290px;
         height: fit-content;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
 
     #contain-city {
         margin-bottom: 50px;
+    }
+
+
+    /* Page de choix joueur --------------------*/
+    #choix {
+        position: relative;
+        background-image: url(../public/treasure.jpg);
+        background-position: bottom right;
+        background-repeat: no-repeat;
+        background-size: 60%;
+    }
+
+    #choix ul {
+        border: 1px solid white;
+        color: var(--tertiary-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
     }
 
 
