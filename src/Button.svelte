@@ -27,7 +27,7 @@
     width: max-content;
     box-sizing: border-box;
     border: 0;
-    font-size: 16px;
+    font-size: clamp(0.7rem, 2.4vw, 1rem);
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
@@ -36,7 +36,7 @@
 .button-32:not(:disabled):hover,
 .button-32:not(:disabled):focus {
     outline: 0;
-    background: var(--primary-color);
+    background: #ffc400;
     box-shadow: 2px 2px 2px 2px var(--secondary-color), 2px 2px 2px 2px var(--secondary-color);
 }
 

@@ -2,33 +2,72 @@
 <script>
 
     // Imports:----------------------------------------------------------------
-    import Button from "./Button.svelte";
+    import Button from "./Button.svelte"; 
+    import { hasContext, onMount } from "svelte";
+
+
+
     // Variables:--------------------------------------------------------------
-    let currentPage = $state("accueil");      // Page courante
-    const winnerPlayer = $state({             // Objet du meilleur joueur
+    let currentPage = $state("accueil");                // Page courante
+    const winnerPlayer = $state({                       // Meilleur joueur (objet)
         nom: null,
         score: null
     });
-    const currentPlayer = $state({            // Objet joueur actuel
+    const currentPlayer = $state({                      // Joueur actuel (objet)
         nom: "",
-        age: 0,
+        age: null,
         ville: ""
     });
-    const listPlayers = $state([]);           // Tous les joueurs crées (tableau d'objets)
+    let listPlayersLocal = $state([]);                  // Tous les joueurs crées (tableau d'objets local chargé onMount)
+    let fullListItems = $state([]);                     // Tous les objets (tableau d'objets local chargé onMount)
+    let itemsFoundsInBag = $state([]);                  // Tous les objets trouvés (tab. d'objets local)
+    let roundSearch = $state(0);                        // Round de recherche sur 10
 
 
 
     // Fonctions:--------------------------------------------------------------
-    function addPlayer() {
-        listPlayers.push({ ...currentPlayer });
-        // console.log("Liste joueurs:", listPlayers.map(p => ({ ...p }))); Pour logguer proprement avec $state
+    async function saveNewPlayer() {                    // Fonction pour ajout joueur (PB) ⬇️
+        const newPlayer = {
+            nom: currentPlayer.nom,
+            age: currentPlayer.age,
+            ville: currentPlayer.ville
+        };
+        await fetch("http://127.0.0.1:8090/api/collections/joueurs/records", {
+            method: "POST",
+            headers: {"Content-type":"application/json"},
+            body: JSON.stringify(newPlayer)
+        });
+        currentPlayer.nom = "";       // On vide les champs:
+        currentPlayer.age = null;
+        currentPlayer.ville = "";
     }
-    async function saveNewPlayer() {
-        
+    function addPlayer() {
+        listPlayersLocal.push({ ...currentPlayer });    // Ajout du joueur crée/courant au tableau jpueurs (LOCAL)
+        saveNewPlayer();                                // Ajout du joueur crée/courant dans liste joueurs (PB)
+        // console.log("Liste joueurs:", listPlayersLocal.map(p => ({ ...p })));   // Pour logguer proprement avec $state
+    }
+    function pickItemRandom() {
+        let nombreAuHasard = Math.floor(Math.random() * (fullListItems.length + 1)); //TODO Formule à vérifier
+        let objItemPick = fullListItems[nombreAuHasard];  // Un objet au hasard dans la variable objItemPick
+        itemsFoundsInBag.push(objItemPick);               // Ce même objet pushé dans le tab. itemsFoundsInBag
+        let idItemPick = objItemPick.id                   // L'id de l'objet au hasard
+        fullListItems = fullListItems.filter(obj => obj.id !== idItemPick);  // On garde que ceux qui n'ont pas l'Id trouvé
+        console.log(roundSearch);
+        roundSearch ++;
+        console.log(roundSearch);
     }
 
-    
+
     // Au démarrage de l'application: -----------------------------------------
+    onMount(async() => {
+        const response = await fetch("http://127.0.0.1:8090/api/collections/joueurs/records");
+        const data = await response.json();
+        listPlayersLocal = [...data.items];   // On charge la liste des joueurs déjà crées au démarrage
+        
+        const responce2 = await fetch("http://127.0.0.1:8090/api/collections/objets/records");
+        const data2 = await responce2.json();
+        fullListItems = [...data2.items];     // On charge la liste des objets trouvables au démarrage
+    })
 
 </script>
 
@@ -43,6 +82,9 @@
             <h1>MAXI-TREASURE</h1>
             <Button textButton="Créer joueur" on:click={() => currentPage = "creation"}/>
             <Button textButton="Choisir joueur" on:click={() => currentPage = "choix"}/>
+            <p id="para">Partez à la conqûete du plus gros trésor !<br>
+                Gardez les objets ayant le plus de valeur...
+            </p>
             <div id="bloc-winner">
                 <img src="../public/winner.png" alt="couronne du vainqueur">
                 <p>record: <span class="gras">{winnerPlayer.nom}</span></p>
@@ -67,6 +109,7 @@
                     <input id="city" type="text" bind:value={currentPlayer.ville}>
                 </div>
                 <Button textButton="Créer ce joueur" on:click={addPlayer}></Button>
+                <Button textButton="Voir les joueurs" on:click={() => currentPage = "choix"}></Button>
                 <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"}></Button>
             </div>
         </section>
@@ -75,10 +118,31 @@
         <section id="choix">
             <h1>CHOISIR UN JOUEUR EXISTANT</h1>
             <ul>
-                {#each listPlayers as joueur}
-                    <li>{joueur.nom}, {joueur.age} ans de {joueur.ville} <Button textButton="Jouer avec ce joueur"></Button></li>
+                {#each listPlayersLocal as joueur}
+                    <li><span class="gras space">{joueur.nom}</span> <span>{joueur.age} ans de {joueur.ville}</span><Button textButton="Jouer avec ce joueur" on:click={() => currentPage = "map"}></Button></li>
                 {/each}
             </ul>
+            <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"}></Button>
+        </section>
+    <!-- Page de jeu: map :--------------------------- -->
+    {:else if currentPage === "map"}
+        <section id="map">
+            <article id="ground">
+                <div id="contain-riv"><Button textButton="Chercher dans la rivière..." on:click={pickItemRandom}></Button></div>
+                <div id="contain-for"><Button textButton="Chercher dans la forêt..." on:click={pickItemRandom}></Button></div>
+                <div id="contain-mon"><Button textButton="Chercher dans le montagne..." on:click={pickItemRandom}></Button></div>
+                <div id="contain-mar"><Button textButton="Chercher dans le marais..." on:click={pickItemRandom}></Button></div>
+                <div id="contain-des"><Button textButton="Chercher dans le désert..." on:click={pickItemRandom}></Button></div>
+                <div id="contain-mer"><Button textButton="Chercher dans la mer..." on:click={pickItemRandom}></Button></div>
+            </article>
+            <article id="stuff">
+                <div id="contain-bloc1">
+                    <p>Fouille <span id="compteur-fouille">{roundSearch}</span>/10</p>
+                    <div class="trait"></div>
+                    <p>Objet trouvé:</p>
+                    <p></p>
+                </div>
+            </article>
         </section>
     {/if}
 </main>
@@ -136,6 +200,12 @@
         font-weight: 600;
     }
 
+    .trait {
+        width: 100%;
+        height: 1px;
+        background-color: var(--primary-color);
+        margin-bottom: 20px;
+    }
 
     /* Page d'accueil ----------------------------*/
     #accueil {
@@ -144,6 +214,11 @@
         background-position: bottom right;
         background-repeat: no-repeat;
         background-size: 60%;
+    }
+
+    #para {
+        color: #EFD19A;
+        margin-top: 25px;
     }
 
     /* Page de création joueur --------------------*/
@@ -201,13 +276,123 @@
     }
 
     #choix ul {
-        border: 1px solid white;
-        color: var(--tertiary-color);
+        width: 70%;
+        max-width: 530px;
+        color: var(--fourth-color);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         gap: 10px;
+    }
+
+    #choix li {
+        background-color: #EFD19A;
+        color: black;
+        border-radius: 10px;
+        width: 100%;
+        display: flex;
+        padding: 4px 10px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #choix li span {
+        color: #000000;
+    }
+
+
+    /* Page de map -----------------------------*/
+    /* article ground */
+    #map {
+        border: 3px solid red;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        gap: 5px;
+    }
+
+    #ground {
+        border: 3px solid green;
+        width: 70%;
+        height: 100%;
+        display: grid;
+        gap: 5px;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+
+    #ground div {
+        border-radius: 10px;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding-bottom: 10px;
+    }
+
+    #contain-riv {
+        background: url(../public/map/riviere.jpg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    #contain-for {
+        background: url(../public/map/foret.jpg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    #contain-mon {
+        background: url(../public/map/montagne.jpg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    #contain-mar {
+        background: url(../public/map/marais.jpg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    #contain-des {
+        background: url(../public/map/desert.svg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    #contain-mer {
+        background: url(../public/map/mer.jpg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+
+    /* Article stuff */
+
+    #stuff {
+        border: 3px solid blue;
+        width: 30%;
+        height: 100%;
+        color: var(--tertiary-color);
+        font-size: 1.5rem;
+    }
+
+    #compteur-fouille {
+        color: var(--primary-color);
+    }
+
+    #contain-bloc1 {
+        border: 3px solid rgb(255, 97, 6);
     }
 
 
