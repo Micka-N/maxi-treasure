@@ -6,7 +6,7 @@
 
 
 <!-- 🔧 HTML  ═══════════════════════════ ⬇︎ ⬇︎ ⬇︎ ═════════════════════════════ 🔧 HTML -->
-<button class="button-32" on:click>{textButton}</button>
+<button class="button-32" on:click {...$$restProps}>{textButton}</button>
 
 
 
