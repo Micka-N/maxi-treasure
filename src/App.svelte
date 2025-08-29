@@ -20,14 +20,16 @@
         age: null,
         ville: null,
         score: null, 
-        is_a_best: true
+        is_a_best: true,
+        id: null
     });
     let currentPlayer = $state({                        // Joueur actuel (objet)
         nom: "",
         age: null,
         ville: "",
         score: null,
-        is_a_best: false
+        is_a_best: false,
+        id: null
     });
     let lastItemPick = $state({                         // Le dernier objet pioché (obj)
         nom: "",
@@ -39,36 +41,31 @@
 
 
 
-    // Fonctions:--------------------------------------------------------------
-    async function saveNewPlayer() {                    // Fonction pour ajout joueur POST (PB) ⬇️ 
+    // Fonctions:--------------------------------------------------------------     
+    async function addPlayer() {                        // Fonction pour ajout joueur -----------
         const newPlayer = {
-            nom: currentPlayer.nom,
-            age: currentPlayer.age,
-            ville: currentPlayer.ville
-        };
-        await fetch("http://127.0.0.1:8090/api/collections/joueurs/records", {
-            method: "POST",
-            headers: {"Content-type":"application/json"},
-            body: JSON.stringify(newPlayer)
-        });
-        currentPlayer.nom = "";       // On vide les champs:
-        currentPlayer.age = null;
-        currentPlayer.ville = "";
-    }
-    async function saveBestPlayer() {
-        // await fetch("http://127.0.0.1:8090/api/collections/joueurs/records", {
-        //     method: "PATCH",
-        //     headers: {"Content-type":"application/json"},
-        //     body: JSON.stringify(bestPlayer)
-        // })
-    }
-    function addPlayer() {                              // Fonction pour ajout joueur ---- ⬆️ 
-        listPlayersLocal.push({ ...currentPlayer });    // Ajout du joueur crée/courant au tableau jpueurs (LOCAL)
-        saveNewPlayer();                                // Ajout du joueur crée/courant dans liste joueurs (PB)
-        // console.log("Liste joueurs:", listPlayersLocal.map(p => ({ ...p })));   // Pour logguer proprement avec $state
+        nom: currentPlayer.nom,
+        age: currentPlayer.age,
+        ville: currentPlayer.ville
+    };
+
+    const response = await fetch("http://127.0.0.1:8090/api/collections/joueurs/records", {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify(newPlayer)
+    });
+
+    const data = await response.json();
+    
+    listPlayersLocal.push(data);                          // Ajout du joueur crée/courant au tableau jpueurs (LOCAL)
+
+    currentPlayer.nom = "";       // On vide les champs:
+    currentPlayer.age = null;
+    currentPlayer.ville = "";
     }
     function choosePlayer(joueur) {                     // Fonction pour définir joueur en cours après choix
-        currentPlayer = joueur;
+        currentPlayer = { ...joueur, score: 0 };
+
     }
     function pickItemRandom() {                         // Fonction pour piocher un objet 
         let nombreAuHasard = Math.floor(Math.random() * (fullListItems.length)); //TODO Formule à vérifier
@@ -78,10 +75,10 @@
         roundSearch ++;
     }
     async function deletePlayer(id) {                   // Fonction pour supprimer un joueur
+        console.log(id);
         await fetch(`http://127.0.0.1:8090/api/collections/joueurs/records/${id}`, {
             method: "DELETE"
         });
-
         listPlayersLocal = listPlayersLocal.filter(perso => perso.id !== id);   // Suppression locale
     }
     function addItemInBag() {                           // Ajout du dernier objet pioché à l'inventaire
@@ -96,7 +93,6 @@
     };
      if (roundSearch === 10 || itemsFoundsInBag.length === 6) {   // Activer état "fin de game" si 10 fouilles ou sac plein
             finish = true;
-            console.log(fullListItems);
         }
     }
     function deleteItem() {                             // Remise à zéro du dernier item pioché après "jeter"
@@ -111,23 +107,42 @@
             finish = true;
         }
     }
+    async function saveBestPlayer() {                   // Fonction 🔧 pour save best player
+        let playerRecupereAModifier = listPlayersLocal.filter(pers => pers.id === winnerPlayer.id);
+        await fetch(`http://127.0.0.1:8090/api/collections/joueurs/records/${playerRecupereAModifier[0].id}`, {
+            method: "PATCH",
+            headers: {"Content-type":"application/json"},
+            body: JSON.stringify({
+                is_a_best: true,
+                score: winnerPlayer.score
+            })
+        });
+    }
     function resetEndGame() {                           // Reset apres fin de partie
         if (currentPlayer.score > winnerPlayer.score) { // Si meilleur joueur, remplace le précédent
             currentPlayer.is_a_best = true;
             winnerPlayer = currentPlayer;
+            saveBestPlayer();
         }
-        currentPlayer = null;                           // Tous les resets ⤵️
+        currentPlayer = {                               // Tous les resets ⤵
+            nom: "",
+            age: null,
+            ville: "",
+            score: 0,
+            is_a_best: false,
+            id: null
+        };
         lastItemPick = {
         nom: "",
         type: "",
         points: null,
         rarete: "",
         id: null
-    };
-    itemsFoundsInBag = [];
-    roundSearch = 0;
-    finish = false;
-    getPBItems();
+        };
+        itemsFoundsInBag = [];
+        roundSearch = 0;
+        finish = false;
+        getPBItems();
     }
 
 
@@ -136,16 +151,19 @@
         getPBPlayers();                                 // On charge la liste des joueurs déjà crées au démarrage
         getPBItems();                                   // On charge la liste des objets trouvables au démarrage
     })
-    async function getPBItems() {
+    async function getPBItems() {                       // Fonction 🔧
         const responce2 = await fetch("http://127.0.0.1:8090/api/collections/objets/records");
         const data2 = await responce2.json();
         fullListItems = [...data2.items];               // On charge la liste des objets trouvables au démarrage
-        console.log(fullListItems);
     }
-    async function getPBPlayers() {
+    async function getPBPlayers() {                     // Fonction 🔧
         const response = await fetch("http://127.0.0.1:8090/api/collections/joueurs/records");
         const data = await response.json();
         listPlayersLocal = [...data.items];             // On charge la liste des joueurs déjà crées au démarrage
+        let tabwinner = listPlayersLocal.filter(pers => pers.is_a_best === true);
+        if (tabwinner.length > 0) {
+            winnerPlayer = tabwinner[0];
+        }
     }
 
 </script>
@@ -163,11 +181,13 @@
             <p id="para">Partez à la conqûete du plus gros trésor !<br>
                 Gardez les objets ayant le plus de valeur...
             </p>
+            {#if winnerPlayer.score !== 0 && winnerPlayer.score !== null}
             <div id="bloc-winner">
                 <img src="../public/winner.png" alt="couronne du vainqueur">
-                <p>record: <span class="gras">{winnerPlayer.nom}</span></p>
+                <p>record: <span class="gras">{winnerPlayer.nom}, {winnerPlayer.age}ans <br> de {winnerPlayer.ville}</span></p>
                 <p>score: <span class="gras">{winnerPlayer.score}</span></p>
             </div>
+            {/if}
         </section>
     <!-- --------------------------- Page de CRÉATION :------------------------- -->
     {:else if currentPage === "creation"}
@@ -186,7 +206,7 @@
                     <label for="city">Ville</label>
                     <input id="city" type="text" bind:value={currentPlayer.ville}>
                 </div>
-                <Button textButton="Créer ce joueur" on:click={() => {addPlayer; currentPage = "choix"}} ></Button>
+                <Button textButton="Créer ce joueur" on:click={() => { addPlayer().then(() => currentPage = "choix"); }}></Button>
             </div>
             <Button textButton="Voir les joueurs" on:click={() => currentPage = "choix"}></Button>
             <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"}></Button>
@@ -209,8 +229,8 @@
                     </li>
                 {/each}
             </ul>
-            <Button textButton="Créer un joueur" on:click={() => currentPage = "creation"}/>
-            <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"}></Button>
+            <Button textButton="Créer un joueur" on:click={() => currentPage = "creation"} />
+            <Button textButton="Revenir à l'accueil" on:click={() => currentPage = "accueil"} />
         </section>
     <!-- --------------------------- Page de jeu: MAP :------------------------- -->
     {:else if currentPage === "map"}
@@ -232,7 +252,7 @@
                     <div id="contain-mer"></div>
                 {/if}
             </article>
-            <!-- -------------------- Partie INVENTAIRE -------------------- -->
+            <!-- ------------------- Partie INVENTAIRE ------------------------- -->
             {#if roundSearch !== 0}
                 <article id="stuff">
                     <div id="contain-bloc1">
@@ -294,8 +314,13 @@
                             <p>Total de points pour {currentPlayer.nom}: 
                                 <span class="purple-big">{currentPlayer.score}</span>
                             </p>
-                            <Button textButton="Rejouer" on:click={() => {resetEndGame(); currentPage = "choix"}}></Button>
-                            <Button textButton="Accueil" on:click={() => {resetEndGame(); currentPage = "accueil"}}></Button>
+                            {#if currentPlayer.score > winnerPlayer.score}
+                                <img src="../public/winner.png" alt="couronne du vainqueur">
+                            {/if}
+                            <div id="contain-btns-win">
+                                <Button textButton="Rejouer" on:click={() => {resetEndGame(); currentPage = "choix"}}></Button>
+                                <Button textButton="Accueil" on:click={() => {resetEndGame(); currentPage = "accueil"}}></Button>
+                            </div>
                         </div>
                         {:else}
                             <div id="contain-score-game">
@@ -678,7 +703,7 @@
 
     .item-in-slot {
         width: 100%;
-        height: 100%;
+        height: 85%;
         border-radius: 0 10px 10px 0;
         padding: 0 15px;
         display: flex;
@@ -710,12 +735,17 @@
         font-size:  clamp(1rem, 1.3vw, 1.6rem);
         height: 33%;
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
         color: #2c1d10;
         border-radius: 10px 10px 10px 10px;
+        padding-bottom: 15px;
     }
 
-    #contain-score-game-finish p{
-        margin-bottom: 85px;
+    #contain-score-game-finish img {
+        width: 64px;
     }
 
 
